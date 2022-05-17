@@ -1,0 +1,6 @@
+/node_modules/
+/.idea/modules.xml
+/package-lock.json
+/.idea/planeamento-api.iml
+/.idea/vcs.xml
+/.env

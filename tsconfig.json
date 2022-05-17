@@ -1,0 +1,21 @@
+/* To learn more about this file see: https://angular.io/config/tsconfig. */
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./dist",
+    "sourceMap": true,
+    "declaration": false,
+    "downlevelIteration": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "moduleResolution": "node",
+    "importHelpers": true,
+    "lib": ["ES2015","es2019", "es2020.promise", "es2020.bigint", "es2020.string", "DOM"],
+    "module": "CommonJS",
+    "target": "ES6",
+    "allowSyntheticDefaultImports": true,
+    "strict": false,
+    "skipLibCheck": true,
+  }
+}
