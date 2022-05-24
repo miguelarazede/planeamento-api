@@ -8,19 +8,19 @@ const dotenv = process.env;
 //     return date.format('YYYY-MM-DD HH:mm:ss.SSS');
 // }.bind(DataTypes.DATE.prototype);
 
-const sequelizer = new Sequelize(
-    dotenv.SEQUELIZE_DATABASE ? dotenv.SEQUELIZE_DATABASE : '',
-    dotenv.SEQUELIZE_USER ? dotenv.SEQUELIZE_USER : '',
-    dotenv.SEQUELIZE_PASS,
+const sequelizerBamer = new Sequelize(
+    dotenv.SQL_DATABASE,
+    dotenv.SQL_USER,
+    dotenv.SQL_PASS,
     {
-        host: dotenv.SEQUELIZE_SERVER,
-        port: dotenv.SEQUELIZE_PORT ? +dotenv.SEQUELIZE_PORT : 1433,
+        host: dotenv.SQL_SERVER,
+        port: +dotenv.SQL_PORT,
 
         dialect: 'mssql',
         dialectOptions: {
             options: {
                 trustServerCertificate: false,
-                instanceName: dotenv.SEQUELIZE_INSTANCE,
+                instanceName: dotenv.SQL_INSTANCE,
                 encrypt: false,
                 enableArithAbort: true,
             },
@@ -37,4 +37,4 @@ const sequelizer = new Sequelize(
     }
 );
 
-export default sequelizer;
+export default sequelizerBamer;

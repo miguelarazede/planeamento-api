@@ -1,7 +1,6 @@
 import * as log4js from 'log4js';
 
 log4js.configure({
-
     appenders: {
         console: {
             type: 'console',
@@ -48,4 +47,4 @@ log4js.configure({
     },
 });
 
-export default log4js;
+export const logg = log4js.getLogger();

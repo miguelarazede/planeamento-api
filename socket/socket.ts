@@ -1,8 +1,8 @@
 import {Socket as socket} from 'socket.io';
 import {BehaviorSubject} from 'rxjs';
-import * as log4js from '../log/logger';
-
-const logg = log4js.default.getLogger('server');
+import {GanntPlaneamento} from '../models/gannt-planeamento';
+import {logg} from '../log/logger';
+import {CtBoentregas} from '../models/ct-boentregas';
 
 export class Socket {
     private readonly io: socket;
@@ -25,8 +25,9 @@ export class Socket {
         });
     }
 
-    getIO() {
-        return this.io;
+    private static configSocketModels(io: socket, socket: socket) {
+        CtBoentregas.socket(io, socket);
+        GanntPlaneamento.socket(io, socket);
     }
 
     private init() {
@@ -34,6 +35,8 @@ export class Socket {
             // logg.info(`Socket ligou id ${socket.id}`);
             const userIn = this.socketObserver.getValue();
             this.socketObserver.next(userIn + 1);
+
+            Socket.configSocketModels(this.io, socket);
 
             socket.on('disconnect', () => {
                 logg.warn(`Socket desligou id ${socket.id}`);

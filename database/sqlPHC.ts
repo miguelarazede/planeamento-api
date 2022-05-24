@@ -1,14 +1,13 @@
 import * as mssqlLib from 'mssql';
-import * as log4js from '../log/logger';
-const logg = log4js.default.getLogger('sqlPHC');
+import {logg} from '../log/logger';
 
 const dotenv = process.env;
 const porta = dotenv.SQL_PORT ? +dotenv.SQL_PORT : 1433;
 const config = {
     user: dotenv.SQL_USER,
-    password: dotenv.SQL_PASSWORD,
+    password: dotenv.SQL_PASS,
     server: dotenv.SQL_SERVER,
-    database: dotenv.SQL_DB,
+    database: dotenv.SQL_DATABASE,
     port: porta,
     pool: {
         max: 50,
@@ -40,6 +39,7 @@ export const poolBamer = new mssqlLib.ConnectionPool(config, (err) => {
     })
     .catch((err) => {
         logg.error('Ligação a MSSQL PHC falhou: ', err);
+        process.exit(1);
     });
 
 // export default poolPromisePHC;

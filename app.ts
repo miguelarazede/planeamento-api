@@ -1,14 +1,13 @@
 import * as express from 'express';
-import * as log4js from './log/logger';
+import {logg} from './log/logger';
 import * as path from 'path';
 import * as http from 'http';
 import * as cors from 'cors';
 import {Socket} from './socket/socket';
-import sequelizer from './sequelize/sequelizer';
+import sequelizerIndustria from './sequelize/sequelizerIndustria';
 import {poolBamer} from './database/sqlPHC';
 import {MssqlBroker} from './sqlbroker/sqlbroker';
-
-const logg = log4js.default.getLogger();
+import sequelizerBamer from './sequelize/sequelizerBamer';
 
 class app {
     private http_port: number = +process.env.HTTP_PORT;
@@ -49,10 +48,11 @@ class app {
 
     private initApps(server) {
         new Socket(server);
-        this.startSequelize().catch();
+        this.startSequelizeIndustria().catch();
+        this.startSequelizeBamer().catch();
+
         poolBamer
             .then(() => {
-                logg.debug('POOL Bamer realizada com sucesso');
                 new MssqlBroker();
             })
             .catch((err) => {
@@ -60,20 +60,40 @@ class app {
             });
     }
 
-    private async startSequelize() {
-        const sequelizerSyncro = await sequelizer
+    private async startSequelizeIndustria() {
+        const sequelizerIndSync = await sequelizerIndustria
             .sync({force: false})
             .catch((err) => {
                 logg.error(err);
             });
 
-        if (!sequelizerSyncro) {
+        if (!sequelizerIndSync) {
             return;
         }
 
-        sequelizerSyncro.authenticate()
+        sequelizerIndSync.authenticate()
             .then(() => {
                 logg.info(`Sequelize ON na DB ${process.env.SEQUELIZE_DATABASE}`);
+            })
+            .catch((err) => {
+                logg.error('Sequelize erro:', err);
+            });
+    }
+
+    private async startSequelizeBamer() {
+        const sequelizerBamerSync = await sequelizerBamer
+            .sync({force: false})
+            .catch((err) => {
+                logg.error(err);
+            });
+
+        if (!sequelizerBamerSync) {
+            return;
+        }
+
+        sequelizerBamerSync.authenticate()
+            .then(() => {
+                logg.info(`Sequelize ON na DB ${process.env.SQL_DATABASE}`);
             })
             .catch((err) => {
                 logg.error('Sequelize erro:', err);
