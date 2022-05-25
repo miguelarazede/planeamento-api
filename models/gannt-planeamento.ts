@@ -1,4 +1,3 @@
-import {Socket} from 'socket.io';
 import {ITarefaTeams} from './ct-boentregas';
 import {GanttPlaneamentoModel, IGanttPlaneamento} from './sequelize/gantt-planeamento-model';
 import {logg} from '../log/logger';
@@ -6,17 +5,21 @@ import {IOsProcesso} from './os-processos';
 import {Funcoes} from '../shared/funcoes';
 
 export class GanntPlaneamento {
-    static socket(io: Socket, socket: Socket) {
-
-    }
+    static TIPO_EC = 10;
+    static TIPO_ITEM_PLANEAMENTO = 20;
+    static TIPO_PREPARACAO = 30;
+    static TIPO_APROVISIONAMENTO = 40;
+    static TIPO_OS = 50;
+    static TIPO_PROCESSOS_OS = 60;
+    static TIPO_EXPEDICAO = 70;
 
     static async insertUpdateFromTarefa(tarefa: ITarefaTeams) {
         const ganttPlaneamento: IGanttPlaneamento = {
             dataLimite: tarefa.dataLimite,
             oristamp: tarefa.ct_boentregasstamp,
-            createdAt: null,
-            updatedAt: null,
-            stamp: null,
+            createdAt: undefined,
+            updatedAt: undefined,
+            stamp: undefined,
             end: tarefa.fim,
             id: 1,
             bostamp: tarefa.bostamp,
@@ -140,7 +143,7 @@ export class GanntPlaneamento {
                 parentID: 0,
                 resourceEmail: '',
                 progress: 0,
-                tipo: 10,
+                tipo: this.TIPO_EC,
                 resourceName: '',
                 fechada: false,
             };
@@ -170,7 +173,7 @@ export class GanntPlaneamento {
                 parentID: 10,
                 resourceEmail: iOsProcesso.email,
                 progress: 0,
-                tipo: 20,
+                tipo: this.TIPO_ITEM_PLANEAMENTO,
                 resourceName: iOsProcesso.email,
                 fechada: false,
             };
@@ -199,7 +202,7 @@ export class GanntPlaneamento {
                 parentID: 20,
                 resourceEmail: '',
                 progress: 0,
-                tipo: 50,
+                tipo: this.TIPO_OS,
                 resourceName: '',
                 fechada: false,
             };
@@ -217,18 +220,15 @@ export class GanntPlaneamento {
     private static insertUpdateGanttProcessosDaOS(iOsProcessos: IOsProcesso[]): Promise<[GanttPlaneamentoModel, boolean][]> {
         return new Promise(async (resolve, reject) => {
             const recs: [GanttPlaneamentoModel, boolean][] = [];
-            const del = await GanttPlaneamentoModel.destroy({
+            await GanttPlaneamentoModel.destroy({
                 where: {
                     bostamp: iOsProcessos[0].ec.bostamp,
-                    tipo: 60,
+                    tipo: this.TIPO_PROCESSOS_OS,
                 }
             }).catch((err) => {
                 logg.error(err.message);
                 reject(err);
             });
-            if (!del) {
-                return;
-            }
 
             for await (const iOsProcesso of iOsProcessos) {
                 const ct = iOsProcesso.ct;
@@ -244,7 +244,7 @@ export class GanntPlaneamento {
                     parentID: 50,
                     resourceEmail: iOsProcesso.email,
                     progress: 0,
-                    tipo: 60,
+                    tipo: this.TIPO_PROCESSOS_OS,
                     resourceName: iOsProcesso.email,
                     fechada: false,
                 };
@@ -266,7 +266,7 @@ export class GanntPlaneamento {
             let gantt: IGanttPlaneamento = {
                 bostamp: iOsProcesso.ec.bostamp,
                 processo: '',
-                start: iOsProcesso.expedicao.datafinal,
+                start: iOsProcesso.expedicao.dataopen,
                 end: iOsProcesso.expedicao.datafinal,
                 dataLimite: iOsProcesso.ct.data,
                 oristamp: iOsProcesso.expedicao.bostamp,
@@ -275,7 +275,7 @@ export class GanntPlaneamento {
                 parentID: 20,
                 resourceEmail: '',
                 progress: 0,
-                tipo: 50,
+                tipo: this.TIPO_EXPEDICAO,
                 resourceName: '',
                 fechada: false,
             };

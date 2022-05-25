@@ -1,8 +1,6 @@
 import {Socket as socket} from 'socket.io';
 import {BehaviorSubject} from 'rxjs';
-import {GanntPlaneamento} from '../models/gannt-planeamento';
 import {logg} from '../log/logger';
-import {CtBoentregas} from '../models/ct-boentregas';
 
 export class Socket {
     private readonly io: socket;
@@ -25,9 +23,7 @@ export class Socket {
         });
     }
 
-    private static configSocketModels(io: socket, socket: socket) {
-        CtBoentregas.socket(io, socket);
-        GanntPlaneamento.socket(io, socket);
+    private static configSocketModels(_io: socket, _socket: socket) {
     }
 
     private init() {

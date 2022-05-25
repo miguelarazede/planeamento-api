@@ -1,4 +1,3 @@
-import {Socket} from 'socket.io';
 import {logg} from '../log/logger';
 import Axios, {AxiosRequestConfig} from 'axios';
 import {Bo, IBo} from './bo';
@@ -37,10 +36,6 @@ export interface ITarefaTeams {
 }
 
 export class CtBoentregas {
-    static socket(io: Socket, socket: Socket) {
-
-    }
-
     static async inserirTarefaTeamsFromPHC(payload: any) {
         return new Promise(async (resolve, reject) => {
             const ct: ICtBoentrega = payload as ICtBoentrega;

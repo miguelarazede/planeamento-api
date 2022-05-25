@@ -3,11 +3,9 @@ import {Bo, IBo} from './bo';
 import {CtBoentregas, ICtBoentrega} from './ct-boentregas';
 import {GamaOpCabModel, IGamaOpCab} from './sequelize/gama-op-cab-model';
 import {IGamaOpLin} from './sequelize/gamas-op-lin-model';
-import * as path from 'path';
-import {Funcoes} from '../shared/funcoes';
-import {poolBamer} from '../database/sqlPHC';
 import {GamaOpLin} from './gamas-op-lin';
 import {GanntPlaneamento} from './gannt-planeamento';
+import {OSProcessosModel} from './sequelize/os-processos';
 
 export interface IOsProcesso {
     stamp: string;
@@ -54,7 +52,7 @@ export class OsProcessos {
         });
     }
 
-    static deleteOrigemPHC(_payload: IOsProcesso): Promise<IOsProcesso[]> {
+    static deleteOrigemPHC(_payload: IOsProcesso): Promise<IOsProcesso[] | void> {
         return new Promise(async (resolve, _reject) => {
             // const osProcessos = await OsProcessos.getDadosProcesso(payload.bostamp)
             //     .catch(err => {
@@ -65,46 +63,63 @@ export class OsProcessos {
             //     return;
             // }
             // resolve(osProcessos);
-            resolve(null);
+            resolve();
         });
     }
 
     static async getDadosProcesso(bostamp: string): Promise<IOsProcesso[]> {
         return new Promise(async (resolve, reject) => {
-            let ficheiro = path.join(process.cwd(), 'query', 'os-gama-processos.sql');
-            const sqlText = await Funcoes.getConteudoFicheiro(ficheiro)
-                .catch(err => {
-                    logg.error(err.message);
-                    reject(err);
-                });
-            if (!sqlText) {
-                logg.warn('sqlText undefined');
-                return;
-            }
+            // let ficheiro = path.join(process.cwd(), 'query', 'os-gama-processos.sql');
+            // const sqlText = await Funcoes.getConteudoFicheiro(ficheiro)
+            //     .catch(err => {
+            //         logg.error(err.message);
+            //         reject(err);
+            //     });
+            // if (!sqlText) {
+            //     logg.warn('sqlText undefined');
+            //     return;
+            // }
+            //
+            // const pool = await poolBamer.catch(err => {
+            //     logg.error(err.message);
+            //     reject(err);
+            // });
+            // if (!pool) {
+            //     logg.warn('pool undefined');
+            //     return;
+            // }
+            //
+            // const recordsetsOsProcessos = await pool
+            //     .request()
+            //     .input('bostamp', bostamp)
+            //     .query(sqlText)
+            //     .catch(err => {
+            //         logg.error(err.message);
+            //         reject(err);
+            //     });
+            // if (!recordsetsOsProcessos) {
+            //     logg.warn('recordsetsOsProcessos undefined');
+            //     return;
+            // }
+            //
+            // const osProcessos = recordsetsOsProcessos.recordset as IOsProcesso[];
 
-            const pool = await poolBamer.catch(err => {
+            const sqlz_os_processos = await OSProcessosModel.findAll({
+                where: {
+                    isHistory: false,
+                    bostamp
+                },
+                order: ['ordem']
+            }).catch((err: Error) => {
                 logg.error(err.message);
                 reject(err);
             });
-            if (!pool) {
-                logg.warn('pool undefined');
+            if(!sqlz_os_processos) {
                 return;
             }
 
-            const recordsetsOsProcessos = await pool
-                .request()
-                .input('bostamp', bostamp)
-                .query(sqlText)
-                .catch(err => {
-                    logg.error(err.message);
-                    reject(err);
-                });
-            if (!recordsetsOsProcessos) {
-                logg.warn('recordsetsOsProcessos undefined');
-                return;
-            }
+            const osProcessos = sqlz_os_processos as any;
 
-            const osProcessos = recordsetsOsProcessos.recordset as IOsProcesso[];
 
             // DADOS DA OS
             const dadosOS: IBo | void = await Bo.getDadosPorBostamp(bostamp)

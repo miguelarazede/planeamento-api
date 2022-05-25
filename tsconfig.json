@@ -11,11 +11,21 @@
     "emitDecoratorMetadata": true,
     "moduleResolution": "node",
     "importHelpers": true,
-    "lib": ["ES2015","es2019", "es2020.promise", "es2020.bigint", "es2020.string", "DOM"],
+    "lib": [
+      "ES2015",
+      "es2019",
+      "es2020.promise",
+      "es2020.bigint",
+      "es2020.string",
+      "DOM"
+    ],
     "module": "CommonJS",
     "target": "ES6",
     "allowSyntheticDefaultImports": true,
-    "strict": false,
     "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitReturns": true,
+//    "strict": true,
+//    "noUnusedLocals": true
   }
 }

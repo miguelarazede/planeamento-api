@@ -7,12 +7,13 @@ export interface IBo {
     nome2: string;
     obrano: number;
     bostamp: string;
+    dataopen: Date;
     datafinal: Date;
 }
 
 export class Bo {
 
-    static async getDadosPorBostamp(bostamp: string): Promise<any> {
+    static async getDadosPorBostamp(bostamp: string): Promise<IBo> {
         return new Promise<any>(async (resolve, reject) => {
             const pool = await poolBamer.catch(err => {
                 reject(err);

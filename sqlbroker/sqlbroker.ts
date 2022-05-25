@@ -1,3 +1,4 @@
+// @ts-ignore
 import * as Sqlssb from 'sqlssb';
 import {logg} from '../log/logger';
 import {CtBoentregas} from '../models/ct-boentregas';
@@ -29,7 +30,7 @@ export class MssqlBroker {
                 logg.info('MSSQL Broker Service ON');
                 const tipoMensagem = process.env.SB_GANTT_PLAN_MESSAGE_TYPE;
                 logg.info(`A escutar mensagens do tipo ${tipoMensagem}`);
-                brokerServiceTalker.on(tipoMensagem, async (ctx) => {
+                brokerServiceTalker.on(tipoMensagem, async (ctx: any) => {
                     const jsonMessageBody = JSON.parse(ctx.messageBody);
                     for (const jsonElement of jsonMessageBody) {
                         const elemento: IComando = jsonElement;
@@ -99,7 +100,7 @@ export class MssqlBroker {
                     }
                 });
             })
-            .catch(err => {
+            .catch((err: Error) => {
                 logg.error('BROKER ERROR', err);
             });
     }

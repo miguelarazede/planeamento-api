@@ -8,8 +8,10 @@ import sequelizerIndustria from './sequelize/sequelizerIndustria';
 import {poolBamer} from './database/sqlPHC';
 import {MssqlBroker} from './sqlbroker/sqlbroker';
 import sequelizerBamer from './sequelize/sequelizerBamer';
+import {Api} from './controllers/api';
 
 class app {
+    // @ts-ignore
     private http_port: number = +process.env.HTTP_PORT;
 
     constructor() {
@@ -25,11 +27,12 @@ class app {
         const app = express();
         app.use(cors());
         app.use(jsonParser);
-        const server = http.createServer(app);
+        const server: http.Server = http.createServer(app);
 
         const angularPreparacaoDist = path.join(__dirname, '..', 'embalagem-angular', 'dist', 'embalagem');
         app.use('/public', express.static(path.join(__dirname, 'public')));
         app.use('/temp', express.static(path.join(__dirname, 'temp')));
+        app.use('/api', new Api().router);
         app.use(express.static(angularPreparacaoDist));
         app.use('/', urlEncodedParser, (req: express.Request, res: express.Response) => {
             res.status(200).sendFile('/', {root: angularPreparacaoDist});
@@ -39,14 +42,16 @@ class app {
         server
             .listen(this.http_port, () => {
                 logg.info(`Http Server porta ${this.http_port}`);
-                this.initApps(server);
+                if (server) {
+                    this.initApps(server);
+                }
             })
             .on('error', (err) => {
                 logg.fatal('Erro ao iniciar Servidor HTTP:', err.message);
             });
     }
 
-    private initApps(server) {
+    private initApps(server: http.Server) {
         new Socket(server);
         this.startSequelizeIndustria().catch();
         this.startSequelizeBamer().catch();
