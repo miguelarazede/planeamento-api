@@ -69,41 +69,6 @@ export class OsProcessos {
 
     static async getDadosProcesso(bostamp: string): Promise<IOsProcesso[]> {
         return new Promise(async (resolve, reject) => {
-            // let ficheiro = path.join(process.cwd(), 'query', 'os-gama-processos.sql');
-            // const sqlText = await Funcoes.getConteudoFicheiro(ficheiro)
-            //     .catch(err => {
-            //         logg.error(err.message);
-            //         reject(err);
-            //     });
-            // if (!sqlText) {
-            //     logg.warn('sqlText undefined');
-            //     return;
-            // }
-            //
-            // const pool = await poolBamer.catch(err => {
-            //     logg.error(err.message);
-            //     reject(err);
-            // });
-            // if (!pool) {
-            //     logg.warn('pool undefined');
-            //     return;
-            // }
-            //
-            // const recordsetsOsProcessos = await pool
-            //     .request()
-            //     .input('bostamp', bostamp)
-            //     .query(sqlText)
-            //     .catch(err => {
-            //         logg.error(err.message);
-            //         reject(err);
-            //     });
-            // if (!recordsetsOsProcessos) {
-            //     logg.warn('recordsetsOsProcessos undefined');
-            //     return;
-            // }
-            //
-            // const osProcessos = recordsetsOsProcessos.recordset as IOsProcesso[];
-
             const sqlz_os_processos = await OSProcessosModel.findAll({
                 where: {
                     isHistory: false,

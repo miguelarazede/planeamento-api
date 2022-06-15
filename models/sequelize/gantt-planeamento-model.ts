@@ -4,6 +4,7 @@ import sequelizerIndustria from '../../sequelize/sequelizerIndustria';
 export interface IGanttPlaneamento {
     stamp?: string;
     bostamp: string; // bostamp da EC
+    obranoec: number;
     id: number;
     parentID: number;
     title: string;
@@ -13,12 +14,15 @@ export interface IGanttPlaneamento {
     processo: string;
     tipo: number; // 0: Preparação; 1: Aprovisionamento; 2: OS; 3: Expedição
     oristamp: string;
+    relstamp: string; // stamp da OS nos processos
     resourceName: string;
     resourceEmail: string;
     dataLimite: Date;
     fechada: boolean;
     createdAt?: Date;
     updatedAt?: Date;
+    isDataDefinida: boolean;
+    idTeamsTask: string;
 }
 
 export class GanttPlaneamentoModel extends Model {
@@ -34,6 +38,11 @@ GanttPlaneamentoModel.init(
         },
         bostamp: {
             type: DataTypes.STRING,
+            allowNull: false,
+            defaultValue: ''
+        },
+        obranoec: {
+            type: DataTypes.INTEGER,
             allowNull: false,
             defaultValue: ''
         },
@@ -82,6 +91,11 @@ GanttPlaneamentoModel.init(
             allowNull: true,
             defaultValue: ''
         },
+        relstamp: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: ''
+        },
         resourceName: {
             type: DataTypes.STRING,
             allowNull: true,
@@ -102,10 +116,19 @@ GanttPlaneamentoModel.init(
             allowNull: false,
             defaultValue: false
         },
+        isDataDefinida: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false
+        },
+        idTeamsTask: {
+            type: DataTypes.STRING(50),
+            defaultValue: ''
+        },
     }, {
         sequelize: sequelizerIndustria,
         tableName: 'ganttplans',
-        freezeTableName: false,
+        freezeTableName: true,
     }
 );
 

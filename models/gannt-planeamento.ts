@@ -17,12 +17,14 @@ export class GanntPlaneamento {
         const ganttPlaneamento: IGanttPlaneamento = {
             dataLimite: tarefa.dataLimite,
             oristamp: tarefa.ct_boentregasstamp,
+            relstamp: '',
             createdAt: undefined,
             updatedAt: undefined,
             stamp: undefined,
             end: tarefa.fim,
             id: 1,
             bostamp: tarefa.bostamp,
+            obranoec: 0,
             processo: 'preparação',
             progress: 0,
             resourceEmail: '',
@@ -31,7 +33,9 @@ export class GanntPlaneamento {
             tipo: 4,
             title: tarefa.titulo,
             parentID: 0,
-            fechada: false
+            fechada: false,
+            isDataDefinida: false,
+            idTeamsTask: tarefa.idTeamsTask
         };
         delete ganttPlaneamento.createdAt;
         delete ganttPlaneamento.updatedAt;
@@ -104,7 +108,7 @@ export class GanntPlaneamento {
             }
 
             // PROCESSOS
-            const retProcessos = await this.insertUpdateGanttProcessosDaOS(osProcessos)
+            const retProcessos = await this.insertGanttProcessosDaOS(osProcessos)
                 .catch(err => {
                     logg.error(err.message);
                     reject(err);
@@ -114,7 +118,7 @@ export class GanntPlaneamento {
                 logg.info(`Processos: ${retProcessos.length}`);
             }
 
-            // OS
+            // EXPEDIÇÃO
             const retExpedicao = await this.insertUpdateGanttExpedicao(osProcessos[0])
                 .catch(err => {
                     logg.error(err.message);
@@ -133,11 +137,13 @@ export class GanntPlaneamento {
             const ec = iOsProcesso.ec;
             let gantt: IGanttPlaneamento = {
                 bostamp: ec.bostamp,
+                obranoec: ec.obrano,
                 processo: '',
                 start: new Date(),
                 end: new Date(),
                 dataLimite: iOsProcesso.ct.data,
                 oristamp: ec.bostamp,
+                relstamp: '',
                 id: 10,
                 title: `EC #${ec.obrano}; Obra: ${ec.fref.trim()} - ${ec.nmfref.trim()}`,
                 parentID: 0,
@@ -146,8 +152,10 @@ export class GanntPlaneamento {
                 tipo: this.TIPO_EC,
                 resourceName: '',
                 fechada: false,
+                isDataDefinida: GanntPlaneamento.getIsDataDefinida(iOsProcesso),
+                idTeamsTask: '',
             };
-            const retSeq = await GanntPlaneamento.inserirRegistoGantt(gantt)
+            const retSeq = await GanntPlaneamento.inserirGanttSQL(gantt)
                 .catch(err => {
                     logg.error(err.message);
                     reject(err);
@@ -163,11 +171,13 @@ export class GanntPlaneamento {
             const ct = iOsProcesso.ct;
             let gantt: IGanttPlaneamento = {
                 bostamp: iOsProcesso.ec.bostamp,
+                obranoec: iOsProcesso.ec.obrano,
                 processo: '',
                 start: new Date(),
                 end: new Date(),
                 dataLimite: ct.data,
                 oristamp: ct.ct_boentregasstamp,
+                relstamp: ct.bostamp,
                 id: 20,
                 title: ct.item.trim().concat(' - ', ct.descricao.trim()),
                 parentID: 10,
@@ -176,8 +186,10 @@ export class GanntPlaneamento {
                 tipo: this.TIPO_ITEM_PLANEAMENTO,
                 resourceName: iOsProcesso.email,
                 fechada: false,
+                isDataDefinida: GanntPlaneamento.getIsDataDefinida(iOsProcesso),
+                idTeamsTask: '',
             };
-            const retSeq = await GanntPlaneamento.inserirRegistoGantt(gantt)
+            const retSeq = await GanntPlaneamento.inserirGanttSQL(gantt)
                 .catch(err => {
                     logg.error(err.message);
                     reject(err);
@@ -192,11 +204,13 @@ export class GanntPlaneamento {
         return new Promise(async (resolve, reject) => {
             let gantt: IGanttPlaneamento = {
                 bostamp: iOsProcesso.ec.bostamp,
+                obranoec: iOsProcesso.ec.obrano,
                 processo: '',
                 start: new Date(),
                 end: new Date(),
                 dataLimite: iOsProcesso.ct.data,
                 oristamp: iOsProcesso.os.bostamp,
+                relstamp: iOsProcesso.ct_boentregasstamp,
                 id: 50,
                 title: `OS #${iOsProcesso.os.obrano}`,
                 parentID: 20,
@@ -205,8 +219,10 @@ export class GanntPlaneamento {
                 tipo: this.TIPO_OS,
                 resourceName: '',
                 fechada: false,
+                isDataDefinida: GanntPlaneamento.getIsDataDefinida(iOsProcesso),
+                idTeamsTask: '',
             };
-            const retSeq = await GanntPlaneamento.inserirRegistoGantt(gantt)
+            const retSeq = await GanntPlaneamento.inserirGanttSQL(gantt)
                 .catch(err => {
                     logg.error(err.message);
                     reject(err);
@@ -217,12 +233,12 @@ export class GanntPlaneamento {
         });
     }
 
-    private static insertUpdateGanttProcessosDaOS(iOsProcessos: IOsProcesso[]): Promise<[GanttPlaneamentoModel, boolean][]> {
+    private static insertGanttProcessosDaOS(iOsProcessos: IOsProcesso[]): Promise<[GanttPlaneamentoModel, boolean][]> {
         return new Promise(async (resolve, reject) => {
             const recs: [GanttPlaneamentoModel, boolean][] = [];
             await GanttPlaneamentoModel.destroy({
                 where: {
-                    bostamp: iOsProcessos[0].ec.bostamp,
+                    relstamp: iOsProcessos[0].os.bostamp,
                     tipo: this.TIPO_PROCESSOS_OS,
                 }
             }).catch((err) => {
@@ -234,21 +250,25 @@ export class GanntPlaneamento {
                 const ct = iOsProcesso.ct;
                 let gantt: IGanttPlaneamento = {
                     bostamp: iOsProcesso.ec.bostamp,
+                    obranoec: iOsProcesso.ec.obrano,
                     processo: iOsProcesso.gamaOpLin.processo,
                     start: iOsProcesso.inicio,
                     end: iOsProcesso.fim,
                     dataLimite: ct.data,
                     oristamp: iOsProcesso.stamp,
+                    relstamp: iOsProcesso.os.bostamp,
                     id: iOsProcesso.ordem,
-                    title: `${Funcoes.getFriendlyEstado(iOsProcesso.gamaOpLin.processo)}`,
+                    title: `${Funcoes.getFriendlyEstado(iOsProcesso.gamaOpLin.processo).toLowerCase()}`,
                     parentID: 50,
                     resourceEmail: iOsProcesso.email,
                     progress: 0,
                     tipo: this.TIPO_PROCESSOS_OS,
                     resourceName: iOsProcesso.email,
                     fechada: false,
+                    isDataDefinida: GanntPlaneamento.getIsDataDefinida(iOsProcesso),
+                    idTeamsTask: '',
                 };
-                const retSeq = await GanntPlaneamento.inserirRegistoGantt(gantt)
+                const retSeq = await GanntPlaneamento.inserirGanttSQL(gantt)
                     .catch(err => {
                         logg.error(err.message);
                         reject(err);
@@ -263,13 +283,26 @@ export class GanntPlaneamento {
 
     private static insertUpdateGanttExpedicao(iOsProcesso: IOsProcesso): Promise<[GanttPlaneamentoModel, boolean]> {
         return new Promise(async (resolve, reject) => {
+            let dataInicio;
+            let dataFim;
+            if (GanntPlaneamento.getIsDataDefinida(iOsProcesso)) {
+                dataInicio = new Date(iOsProcesso.expedicao.datafinal);
+                dataFim = new Date(iOsProcesso.expedicao.datafinal);
+            } else {
+                dataInicio = new Date(iOsProcesso.ct.data);
+                dataFim = new Date(iOsProcesso.ct.data);
+            }
+            dataInicio.setHours(2);
+            dataFim.setHours(22);
             let gantt: IGanttPlaneamento = {
                 bostamp: iOsProcesso.ec.bostamp,
+                obranoec: iOsProcesso.ec.obrano,
                 processo: '',
-                start: iOsProcesso.expedicao.dataopen,
-                end: iOsProcesso.expedicao.datafinal,
+                start: dataInicio,
+                end: dataFim,
                 dataLimite: iOsProcesso.ct.data,
                 oristamp: iOsProcesso.expedicao.bostamp,
+                relstamp: iOsProcesso.ct_boentregasstamp,
                 id: 70,
                 title: `Expedição #${iOsProcesso.expedicao.obrano}`,
                 parentID: 20,
@@ -278,8 +311,10 @@ export class GanntPlaneamento {
                 tipo: this.TIPO_EXPEDICAO,
                 resourceName: '',
                 fechada: false,
+                isDataDefinida: GanntPlaneamento.getIsDataDefinida(iOsProcesso),
+                idTeamsTask: '',
             };
-            const retSeq = await GanntPlaneamento.inserirRegistoGantt(gantt)
+            const retSeq = await GanntPlaneamento.inserirGanttSQL(gantt)
                 .catch(err => {
                     logg.error(err.message);
                     reject(err);
@@ -290,7 +325,7 @@ export class GanntPlaneamento {
         });
     }
 
-    private static inserirRegistoGantt(gantt: IGanttPlaneamento): Promise<[GanttPlaneamentoModel, boolean]> {
+    private static inserirGanttSQL(gantt: IGanttPlaneamento): Promise<[GanttPlaneamentoModel, boolean]> {
         return new Promise(async (resolve, reject) => {
             const ganttCt = await GanttPlaneamentoModel.findOrCreate({
                 defaults: gantt as any,
@@ -315,5 +350,10 @@ export class GanntPlaneamento {
             }
             resolve(ganttCt);
         });
+    }
+
+    private static getIsDataDefinida(iOsProcesso: IOsProcesso) {
+        const data = new Date(iOsProcesso.expedicao.datafinal);
+        return data.getUTCFullYear() > 1900;
     }
 }
