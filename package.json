@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "pm2install": "pm2 start ecosystem.config.js && pm2 save",
+    "pm2install": "tsc&&pm2 start ecosystem.config.js",
     "start": "ts-node-dev server.ts"
   },
   "keywords": [],

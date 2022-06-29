@@ -61,7 +61,7 @@ export class MssqlBroker {
                             return;
                         }
 
-                        if (elemento.comando.localeCompare('ct_boentregas_ganttplan_insert') === 0 && elemento.payload) {
+                        if (elemento.comando.localeCompare('ct_boentregas_ganttplan_insert') === 0) {
                             if (elemento.payload) {
                                 for (const payloadElement of elemento.payload) {
                                     await CtBoentregas.inserirTarefaTeamsFromPHC(payloadElement)
@@ -75,7 +75,7 @@ export class MssqlBroker {
                             }
                             return;
                         }
-                        if (elemento.comando.localeCompare('ct_boentregas_ganttplan_update') === 0 && elemento.payload) {
+                        if (elemento.comando.localeCompare('ct_boentregas_ganttplan_update') === 0) {
                             if (elemento.payload) {
                                 for await (const payloadElement of elemento.payload) {
                                     await CtBoentregas.updateTarefaTeamsFromPHC(payloadElement).catch();

@@ -53,7 +53,6 @@ export class GanntPlaneamento {
                     const ganntt = ret[0];
                     ganntt.update(defaults)
                         .then((ret2) => {
-                            logg.info('Gannt actualizado');
                             resolve([ret2, ret[1]]);
                         })
                         .catch(err => {

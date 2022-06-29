@@ -40,17 +40,15 @@ export class CtBoentregas {
         return new Promise(async (resolve, reject) => {
             const ct: ICtBoentrega = payload as ICtBoentrega;
             if (!('idTeamsTask' in ct)) {
-                const erro = new Error('sem idTeamsTask property?');
-                logg.error(erro.message, ct);
-                reject(erro);
-                return;
+                ct.idTeamsTask = '';
             }
 
             if (!ct.idTeamsTask) {
                 ct.idTeamsTask = '';
             }
+
             if (ct.idTeamsTask.localeCompare('') !== 0) {
-                logg.debug('Concluido: já tem idTeamsTask (ct_boentregasstamp, idTeamsTask)', ct.ct_boentregasstamp, ct.idTeamsTask);
+                logg.warn('Concluido: já tem idTeamsTask (ct_boentregasstamp, idTeamsTask)', ct.ct_boentregasstamp, ct.idTeamsTask);
                 resolve(true);
                 return;
             }
@@ -215,19 +213,27 @@ export class CtBoentregas {
             if (retornoAxios) {
                 logg.debug(retornoAxios.status, retornoAxios.statusText);
                 if (tarefa.tipo.localeCompare('update') === 0) {
-                    const dinicio = new Date(tarefa.inicio);
-                    const dfim = new Date(tarefa.inicio);
-                    if (dinicio.getUTCFullYear() === 1900 || dfim.getUTCFullYear() === 1900) {
-                        logg.info('Inicio ou fim sem data definida');
-                    } else {
-                        await GanntPlaneamento.insertUpdateFromTarefa(tarefa)
-                            .then(() => {
-                                logg.info('Tarefa inserida ou actualizada no Gantt Planeamento', tarefa);
-                            })
-                            .catch(err => {
-                                logg.error(err.message);
-                            });
-                    }
+                    // const dinicio = new Date(tarefa.inicio);
+                    // const dfim = new Date(tarefa.inicio);
+                    // if (dinicio.getUTCFullYear() === 1900 || dfim.getUTCFullYear() === 1900) {
+                    //     logg.info('Inicio ou fim sem data definida', tarefa);
+                    // } else {
+                    // }
+                    await GanntPlaneamento.insertUpdateFromTarefa(tarefa)
+                        .then(() => {
+                            logg.info('Tarefa actualizada no Gantt Planeamento', tarefa.descricao);
+                        })
+                        .catch(err => {
+                            logg.error(err.message);
+                        });
+                } else {
+                    await GanntPlaneamento.insertUpdateFromTarefa(tarefa)
+                        .then(() => {
+                            logg.info('Tarefa inserida no Gantt Planeamento', tarefa);
+                        })
+                        .catch(err => {
+                            logg.error(err.message);
+                        });
                 }
                 resolve(retornoAxios);
             }
@@ -240,11 +246,16 @@ export class CtBoentregas {
                     .catch(err => {
                         reject(err);
                     });
-                if (!dadosBo) {
-                    return;
-                }
+                if (!dadosBo) return;
+
+                const dadosCT: ICtBoentrega | void = await CtBoentregas.getDadosPorCtBoEntregasstamp(ct.ct_boentregasstamp)
+                    .catch(err => {
+                        reject(err);
+                    });
+                if (!dadosCT) return;
+
                 const bo: IBo = dadosBo;
-                const titulo = `EC: #${bo.obrano}\n${ct.item.trim()} - ${ct.descricao.trim()}`;
+                const titulo = `EC: #${bo.obrano}\n${dadosCT.item.trim()} - ${dadosCT.descricao.trim()}`;
                 const descricao = `Cliente: ${bo.nome2.trim()}\nDesign. Ec: ${bo.trab5.trim()}\nObra: #${bo.fref.trim()} - ${bo.nmfref.trim()}\nDt.Pretendida: ${moment(ct.data).format('DD.MM.yyyy')}`;
                 const tarefa: ITarefaTeams = {
                     ct_boentregasstamp: ct.ct_boentregasstamp,
@@ -259,6 +270,7 @@ export class CtBoentregas {
                     bostamp: ct.bostamp,
                     dataLimite: ct.data,
                 };
+                logg.debug('tarefa', tarefa)
                 resolve(tarefa);
             }
         );

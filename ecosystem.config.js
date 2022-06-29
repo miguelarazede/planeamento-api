@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'ganttplan',
+      name: 'Planeamento',
       script: "./dist/server.js",
       watch: false,
       log: 'ganntplan.log',

@@ -80,6 +80,8 @@ BEGIN
 	close cursorGamas
 	deallocate cursorGamas
 
+	set @stampgamaorigem = ''
+
 	fetch next from cursorDados into @origem, @ststamp
 END
 close cursorDados
